@@ -1,0 +1,277 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Admin Panel - QR Attendance</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
+<style>
+
+body{
+font-family:Roboto;
+background:linear-gradient(135deg,#141E30,#243B55);
+color:white;
+padding:30px;
+}
+
+h1{
+font-family:Orbitron;
+}
+
+.container{
+background:rgba(255,255,255,0.05);
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+input,button{
+padding:10px;
+margin:5px;
+border:none;
+border-radius:5px;
+}
+
+input{
+width:250px;
+}
+
+button{
+background:#00c6ff;
+color:white;
+cursor:pointer;
+}
+
+button:hover{
+background:#0072ff;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+padding:10px;
+border-bottom:1px solid rgba(255,255,255,0.2);
+text-align:left;
+}
+
+.logout{
+float:right;
+background:#ff4b5c;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>Admin Panel</h1>
+<button class="logout" onclick="logout()">Logout</button>
+
+<div class="container">
+
+<h2>Register Student</h2>
+
+<input id="studentID" placeholder="Student ID"><br>
+<input id="name" placeholder="Full Name"><br>
+<input id="course" placeholder="Course"><br>
+<input id="section" placeholder="Year_Section"><br>
+<input id="email" placeholder="Email"><br>
+
+<button onclick="registerStudent()">Register Student</button>
+
+<p id="message"></p>
+
+</div>
+
+<div class="container">
+
+<h2>Students</h2>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Course</th>
+<th>Section</th>
+<th>QR Code</th>
+</tr>
+</thead>
+
+<tbody id="studentTable"></tbody>
+
+</table>
+
+</div>
+
+<div class="container">
+
+<h2>Attendance Records</h2>
+
+<table>
+
+<thead>
+<tr>
+<th>Student ID</th>
+<th>Name</th>
+<th>Date</th>
+<th>Time</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody id="attendanceTable"></tbody>
+
+</table>
+
+</div>
+
+<script>
+
+// FIREBASE CONFIG
+var firebaseConfig = {
+apiKey: "AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
+authDomain: "attsheet-f23a7.firebaseapp.com",
+projectId: "attsheet-f23a7",
+storageBucket: "attsheet-f23a7.appspot.com",
+messagingSenderId: "1039767080370",
+appId: "1:1039767080370:web:24e4b0e68f9d30381f68ab"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+var db = firebase.firestore();
+
+
+// REGISTER STUDENT
+function registerStudent(){
+
+var studentID=document.getElementById("studentID").value;
+var name=document.getElementById("name").value;
+var course=document.getElementById("course").value;
+var section=document.getElementById("section").value;
+var email=document.getElementById("email").value;
+
+if(studentID=="" || name==""){
+alert("Please fill required fields");
+return;
+}
+
+db.collection("students").add({
+
+studentID:studentID,
+name:name,
+course:course,
+section:section,
+email:email
+
+})
+.then(function(){
+
+document.getElementById("message").innerHTML="Student Registered";
+
+document.getElementById("studentID").value="";
+document.getElementById("name").value="";
+document.getElementById("course").value="";
+document.getElementById("section").value="";
+document.getElementById("email").value="";
+
+loadStudents();
+
+});
+
+}
+
+
+// LOAD STUDENTS
+function loadStudents(){
+
+db.collection("students").get().then(function(snapshot){
+
+var table="";
+
+snapshot.forEach(function(doc){
+
+var data=doc.data();
+
+table+=`
+<tr>
+<td>${data.studentID}</td>
+<td>${data.name}</td>
+<td>${data.course}</td>
+<td>${data.section}</td>
+<td><div id="qr${data.studentID}"></div></td>
+</tr>
+`;
+
+});
+
+document.getElementById("studentTable").innerHTML=table;
+
+snapshot.forEach(function(doc){
+
+var data=doc.data();
+
+new QRCode(document.getElementById("qr"+data.studentID),{
+text:data.studentID,
+width:80,
+height:80
+});
+
+});
+
+});
+
+}
+
+loadStudents();
+
+
+// REALTIME ATTENDANCE
+db.collection("attendance").onSnapshot(function(snapshot){
+
+var table="";
+
+snapshot.forEach(function(doc){
+
+var data=doc.data();
+
+table+=`
+<tr>
+<td>${data.studentID}</td>
+<td>${data.name}</td>
+<td>${data.date}</td>
+<td>${data.time}</td>
+<td>${data.status}</td>
+</tr>
+`;
+
+});
+
+document.getElementById("attendanceTable").innerHTML=table;
+
+});
+
+
+// LOGOUT
+function logout(){
+firebase.auth().signOut();
+}
+
+</script>
+
+</body>
+</html>
+```

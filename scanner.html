@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>QR Attendance Scanner</title>
+
+<!-- QR Code Scanner -->
+<script src="https://unpkg.com/html5-qrcode@2.3.7"></script>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<style>
+body{
+    font-family: Arial;
+    background: linear-gradient(135deg,#141E30,#243B55);
+    color:white;
+    text-align:center;
+    padding:30px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+#reader{
+    width:400px;
+    margin:auto;
+}
+
+#status{
+    margin-top:20px;
+    font-size:20px;
+    font-weight:bold;
+}
+
+.success{color:#00ff9d;}
+.error{color:#ff5c5c;}
+</style>
+</head>
+
+<body>
+
+<h1>QR Attendance Scanner</h1>
+
+<div id="reader"></div>
+<div id="status">Starting camera...</div>
+
+<script>
+
+// 🔹 Firebase Config
+var firebaseConfig = {
+    apiKey: "AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
+    authDomain: "attsheet-f23a7.firebaseapp.com",
+    projectId: "attsheet-f23a7",
+    storageBucket: "attsheet-f23a7.appspot.com",
+    messagingSenderId: "1039767080370",
+    appId: "1:1039767080370:web:24e4b0e68f9d30381f68ab"
+};
+
+firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+
+let scanning = true;
+
+
+// 🔹 Format date
+function formatDate(date){
+    let month = ''+(date.getMonth()+1);
+    let day = ''+date.getDate();
+    let year = date.getFullYear();
+
+    if(month.length<2) month='0'+month;
+    if(day.length<2) day='0'+day;
+
+    return [year,month,day].join('-');
+}
+
+
+// 🔹 Scan Success
+function onScanSuccess(decodedText){
+
+    if(!scanning) return;
+    scanning = false;
+
+    const studentID = decodedText.trim();
+    const now = new Date();
+    const date = formatDate(now);
+    const time = now.toLocaleTimeString();
+
+    document.getElementById("status").innerHTML="Checking student...";
+
+    // 🔹 Check student
+    db.collection("students")
+    .where("studentID","==",studentID)
+    .get()
+    .then(snapshot=>{
+
+        if(snapshot.empty){
+
+            document.getElementById("status").innerHTML="❌ Student Not Found";
+            document.getElementById("status").className="error";
+
+            scanning=true;
+            return;
+        }
+
+        const student = snapshot.docs[0].data();
+
+        // 🔹 Check duplicate
+        db.collection("attendance")
+        .where("studentID","==",studentID)
+        .where("date","==",date)
+        .get()
+        .then(att=>{
+
+            if(!att.empty){
+
+                document.getElementById("status").innerHTML="⚠ Already Scanned Today";
+                document.getElementById("status").className="error";
+
+                scanning=true;
+                return;
+            }
+
+            // 🔹 Save attendance
+            db.collection("attendance").add({
+
+                studentID:studentID,
+                name:student.name,
+                date:date,
+                time:time,
+                status:"Present"
+
+            }).then(()=>{
+
+                document.getElementById("status").innerHTML=
+                "✅ Attendance Recorded: "+student.name;
+
+                document.getElementById("status").className="success";
+
+                setTimeout(()=>{
+                    scanning=true;
+                },2000);
+
+            });
+
+        });
+
+    })
+    .catch(err=>{
+
+        console.error(err);
+        document.getElementById("status").innerHTML="❌ Database Error";
+        document.getElementById("status").className="error";
+
+        scanning=true;
+
+    });
+}
+
+
+
+// 🔹 Start Scanner
+const html5QrCode = new Html5Qrcode("reader");
+
+Html5Qrcode.getCameras()
+.then(cameras=>{
+
+    if(cameras.length){
+
+        // Use back camera if available
+        const cameraId = cameras.length > 1 ? cameras[1].id : cameras[0].id;
+
+        html5QrCode.start(
+            cameraId,
+            {
+                fps:10,
+                qrbox:{width:250,height:250}
+            },
+            onScanSuccess
+        );
+
+        document.getElementById("status").innerHTML="📷 Scan a QR Code";
+
+    }
+
+})
+.catch(err=>{
+    document.getElementById("status").innerHTML="Camera Error: "+err;
+    document.getElementById("status").className="error";
+});
+
+</script>
+
+</body>
+</html>
