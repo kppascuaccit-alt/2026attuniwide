@@ -43,7 +43,6 @@ h1{margin-bottom:20px;}
 <div id="status">Starting camera...</div>
 
 <script>
-
 // 🔹 Firebase Config
 var firebaseConfig = {
     apiKey: "AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
@@ -53,7 +52,6 @@ var firebaseConfig = {
     messagingSenderId: "1039767080370",
     appId: "1:1039767080370:web:24e4b0e68f9d30381f68ab"
 };
-
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
@@ -69,6 +67,14 @@ function formatDate(date){
     return [year,month,day].join('-');
 }
 
+// 🔹 Determine session (Morning/Afternoon)
+function getSession(date){
+    const hour = date.getHours();
+    if(hour >=5 && hour <12) return "Morning";
+    if(hour >=12 && hour <18) return "Afternoon";
+    return "Other"; // optional: outside scan hours
+}
+
 // 🔹 Scan Success
 function onScanSuccess(decodedText){
 
@@ -79,6 +85,7 @@ function onScanSuccess(decodedText){
     const now = new Date();
     const date = formatDate(now);
     const time = now.toLocaleTimeString();
+    const session = getSession(now);
 
     document.getElementById("status").innerHTML="Checking student...";
 
@@ -97,32 +104,34 @@ function onScanSuccess(decodedText){
 
         const student = snapshot.docs[0].data();
 
-        // 🔹 Check duplicate for today
+        // 🔹 Check duplicate for today and same session
         db.collection("attendance")
         .where("studentID","==",studentID)
         .where("date","==",date)
+        .where("session","==",session)
         .get()
         .then(att=>{
             if(!att.empty){
-                document.getElementById("status").innerHTML="⚠ Already Scanned Today";
+                document.getElementById("status").innerHTML="⚠ Already Scanned for "+session;
                 document.getElementById("status").className="error";
                 scanning=true;
                 return;
             }
 
-            // 🔹 Save attendance with section & campus
+            // 🔹 Save attendance with session
             db.collection("attendance").add({
                 studentID: studentID,
                 name: student.name,
-                section: student.section || "",   // fix undefined
-                campus: student.campus || "",     // fix undefined
+                section: student.section || "",
+                campus: student.campus || "",
                 date: date,
                 time: time,
-                status: "Present"
+                status: "Present",
+                session: session
             })
             .then(()=>{
                 document.getElementById("status").innerHTML=
-                    "✅ Attendance Recorded: "+student.name;
+                    "✅ Attendance Recorded: "+student.name+" ("+session+")";
                 document.getElementById("status").className="success";
                 setTimeout(()=>{ scanning=true; },2000);
             });
