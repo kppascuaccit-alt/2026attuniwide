@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -53,6 +54,10 @@ h1{
   font-weight:500;
   border-radius:6px;
   transition:0.3s;
+  background:#F97316;
+  color:white;
+  border:none;
+  cursor:pointer;
 }
 
 #loginBox button:hover{
@@ -176,7 +181,11 @@ h2{
   color:#FBBF24;
   margin-bottom:15px;
 }
-
+h3{
+  color:#FACC15;
+  margin-top:20px;
+  margin-bottom:10px;
+}
 </style>
 </head>
 <body>
@@ -232,6 +241,8 @@ h2{
 <div class="container">
 <h2>Attendance Records</h2>
 <button class="export" onclick="exportExcel()">Export to Excel</button>
+
+<h3>Morning Attendance (5:00 AM - 11:59 AM)</h3>
 <table>
 <thead>
 <tr>
@@ -244,12 +255,28 @@ h2{
 <th>Status</th>
 </tr>
 </thead>
-<tbody id="attendanceTable"></tbody>
+<tbody id="morningAttendanceTable"></tbody>
+</table>
+
+<h3>Afternoon Attendance (12:00 PM - 6:00 PM)</h3>
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Section</th>
+<th>Campus</th>
+<th>Date</th>
+<th>Time</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody id="afternoonAttendanceTable"></tbody>
 </table>
 </div>
 
 <script>
-const ADMIN_EMAIL = "kenn04@gmail.com"; // <-- replace with your Gmail
+const ADMIN_EMAIL = "kenn04@gmail.com";
 
 /* FIREBASE CONFIG */
 var firebaseConfig = {
@@ -375,12 +402,47 @@ function loadStudents(){
 }
 loadStudents();
 
+/* MARK ATTENDANCE FUNCTION - Morning or Afternoon */
+function markAttendance(studentID, status){
+  db.collection("students").where("studentID","==",studentID).get()
+  .then(snapshot=>{
+    if(snapshot.empty){ console.log("Student not found"); return; }
+    snapshot.forEach(doc=>{
+      var student = doc.data();
+      const now = new Date();
+      const hour = now.getHours(); // 0-23
+      let session = "";
+
+      if(hour >= 5 && hour < 12){
+        session = "Morning";
+      } else if(hour >= 12 && hour < 18){
+        session = "Afternoon";
+      } else {
+        session = "Evening"; // optional
+      }
+
+      db.collection("attendance").add({
+        studentID: student.studentID,
+        name: student.name,
+        section: student.section,
+        campus: student.campus,
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+        status: status,
+        session: session
+      });
+    });
+  });
+}
+
 /* REALTIME ATTENDANCE */
 db.collection("attendance").onSnapshot(function(snapshot){
-  var table="";
+  var morningTable="";
+  var afternoonTable="";
+
   snapshot.forEach(function(doc){
     var data=doc.data();
-    table+=`<tr>
+    const row = `<tr>
       <td>${data.studentID}</td>
       <td>${data.name}</td>
       <td>${data.section}</td>
@@ -389,15 +451,35 @@ db.collection("attendance").onSnapshot(function(snapshot){
       <td>${data.time}</td>
       <td>${data.status}</td>
     </tr>`;
+
+    if(data.session === "Morning"){
+      morningTable += row;
+    } else if(data.session === "Afternoon"){
+      afternoonTable += row;
+    }
   });
-  document.getElementById("attendanceTable").innerHTML=table;
+
+  document.getElementById("morningAttendanceTable").innerHTML = morningTable;
+  document.getElementById("afternoonAttendanceTable").innerHTML = afternoonTable;
 });
 
 /* EXPORT TO EXCEL */
 function exportExcel(){
   db.collection("attendance").get().then(function(snapshot){
     var data=[];
-    snapshot.forEach(function(doc){ data.push(doc.data()); });
+    snapshot.forEach(function(doc){ 
+      let d = doc.data();
+      data.push({
+        StudentID: d.studentID,
+        Name: d.name,
+        Section: d.section,
+        Campus: d.campus,
+        Date: d.date,
+        Time: d.time,
+        Status: d.status,
+        Session: d.session
+      });
+    });
     var worksheet=XLSX.utils.json_to_sheet(data);
     var workbook=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
@@ -405,6 +487,5 @@ function exportExcel(){
   });
 }
 </script>
-
 </body>
 </html>
