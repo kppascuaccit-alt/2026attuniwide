@@ -11,179 +11,209 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-
 /* ---------- BODY ---------- */
-
 body{
-font-family:'Roboto',sans-serif;
-background:#0F172A;
-color:#F8FAFC;
-padding:30px;
-margin:0;
+  font-family:'Roboto',sans-serif;
+  background:#0F172A;
+  color:#F8FAFC;
+  padding:30px;
+  margin:0;
 }
 
-/* ---------- TITLE ---------- */
-
+/* ---------- TITLES ---------- */
 h1{
-font-family:'Orbitron',sans-serif;
-color:#F97316;
-margin-bottom:20px;
+  font-family:'Orbitron';
+  color:#F97316;
+  margin-bottom:20px;
+}
+
+/* ---------- LOGIN ---------- */
+#loginBox{
+  text-align:center;
+  margin-top:100px;
+}
+
+#loginBox input{
+  width:280px;
+  padding:12px;
+  margin:6px 0;
+  border-radius:6px;
+  border:1px solid #334155;
+  background:#0F172A;
+  color:white;
+  outline:none;
+}
+
+#loginBox button{
+  margin-top:10px;
+  padding:12px 20px;
+  font-weight:500;
+  border-radius:6px;
+  transition:0.3s;
+}
+
+#loginBox button:hover{
+  background:#FB923C;
+  transform:scale(1.05);
 }
 
 /* ---------- CONTAINER ---------- */
-
 .container{
-background:#1E293B;
-padding:25px;
-border-radius:12px;
-margin-bottom:25px;
-box-shadow:0 10px 25px rgba(0,0,0,0.3);
+  background:#1E293B;
+  padding:25px;
+  border-radius:12px;
+  margin-bottom:25px;
+  box-shadow:0 10px 25px rgba(0,0,0,0.3);
+  transition:0.3s;
 }
 
-/* ---------- INPUT ---------- */
+.container:hover{
+  transform:translateY(-3px);
+}
 
+/* ---------- INPUTS ---------- */
 input{
-width:260px;
-padding:10px;
-margin:6px;
-border-radius:6px;
-border:none;
-outline:none;
-background:#0F172A;
-color:white;
-border:1px solid #334155;
+  width:260px;
+  padding:10px;
+  margin:6px;
+  border-radius:6px;
+  border:1px solid #334155;
+  background:#0F172A;
+  color:white;
+  outline:none;
 }
 
-/* ---------- BUTTON ---------- */
-
+/* ---------- BUTTONS ---------- */
 button{
-padding:10px 15px;
-border:none;
-border-radius:6px;
-background:#F97316;
-color:white;
-cursor:pointer;
-font-weight:500;
-transition:0.3s;
+  padding:10px 15px;
+  border:none;
+  border-radius:6px;
+  background:#F97316;
+  color:white;
+  cursor:pointer;
+  font-weight:500;
+  transition:0.3s;
 }
 
 button:hover{
-background:#FB923C;
-transform:scale(1.05);
+  background:#FB923C;
+  transform:scale(1.05);
 }
 
-/* ---------- LOGOUT ---------- */
-
 .logout{
-float:right;
-background:#ef4444;
+  float:right;
+  background:#ef4444;
 }
 
 .logout:hover{
-background:#f87171;
+  background:#f87171;
 }
 
-/* ---------- EXPORT ---------- */
-
 .export{
-background:#F97316;
-margin-bottom:10px;
+  background:#F97316;
+  margin-bottom:10px;
 }
 
 .export:hover{
-background:#FB923C;
+  background:#FB923C;
 }
 
 /* ---------- TABLE ---------- */
-
 table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px;
-background:#0F172A;
-border-radius:8px;
-overflow:hidden;
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+  background:#0F172A;
+  border-radius:8px;
+  overflow:hidden;
 }
-
-/* ---------- HEADER ---------- */
 
 th{
-background:#F97316;
-color:white;
-padding:12px;
-text-align:left;
+  background:#F97316;
+  color:white;
+  padding:12px;
+  text-align:left;
 }
-
-/* ---------- CELLS ---------- */
 
 td{
-padding:12px;
-border-bottom:1px solid #334155;
+  padding:12px;
+  border-bottom:1px solid #334155;
+  vertical-align: middle;
 }
 
-/* ---------- HOVER ---------- */
-
+/* ---------- ROW HOVER ---------- */
 tr:hover{
-background:#1E293B;
+  background:#1E293B;
+}
+
+/* ---------- QR CODES ---------- */
+#studentTable div{
+  background:white;
+  padding:8px;
+  border-radius:8px;
+  display:inline-block;
+  border:2px solid #F97316;
+  transition:0.3s;
+}
+
+#studentTable div:hover{
+  transform:scale(1.1);
+  border-color:#FB923C;
 }
 
 /* ---------- MESSAGE ---------- */
-
 #message{
-margin-top:10px;
-color:#22c55e;
-font-weight:500;
+  margin-top:10px;
+  color:#22c55e;
+  font-weight:500;
 }
 
-/* ---------- QR ---------- */
-
-#studentTable div{
-background:white;
-padding:5px;
-border-radius:6px;
-display:inline-block;
+/* ---------- HEADINGS ---------- */
+h2{
+  color:#FBBF24;
+  margin-bottom:15px;
 }
 
 </style>
 </head>
-
 <body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginBox">
+  <h1>Admin Login</h1>
+  <input id="loginEmail" type="email" placeholder="Email"><br>
+  <input id="loginPassword" type="password" placeholder="Password"><br>
+  <button onclick="loginWithEmail()">Login with Email</button><br><br>
+  <button onclick="googleLogin()">Login with Gmail (Google)</button>
+  <p id="loginMsg"></p>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="adminPanel" style="display:none">
 
 <h1>Admin Panel</h1>
 <button class="logout" onclick="logout()">Logout</button>
 
 <!-- REGISTER STUDENT -->
-
 <div class="container">
-
 <h2>Register Student</h2>
-
 <input id="studentID" placeholder="Student ID"><br>
 <input id="name" placeholder="Full Name"><br>
 <input id="course" placeholder="Course"><br>
 <input id="section" placeholder="Year / Section"><br>
 <input id="campus" placeholder="Campus"><br>
 <input id="email" placeholder="Email"><br>
-
 <button onclick="registerStudent()">Register Student</button>
-
 <p id="message"></p>
-
 </div>
 
-
 <!-- STUDENT TABLE -->
-
 <div class="container">
-
 <h2>Students</h2>
-
 <table>
-
 <thead>
 <tr>
 <th>ID</th>
@@ -191,30 +221,21 @@ display:inline-block;
 <th>Course</th>
 <th>Section</th>
 <th>Campus</th>
-<th>QR Code</th>
+<th>QR</th>
 </tr>
 </thead>
-
 <tbody id="studentTable"></tbody>
-
 </table>
-
 </div>
 
-
 <!-- ATTENDANCE TABLE -->
-
 <div class="container">
-
 <h2>Attendance Records</h2>
-
 <button class="export" onclick="exportExcel()">Export to Excel</button>
-
 <table>
-
 <thead>
 <tr>
-<th>Student ID</th>
+<th>ID</th>
 <th>Name</th>
 <th>Section</th>
 <th>Campus</th>
@@ -223,183 +244,166 @@ display:inline-block;
 <th>Status</th>
 </tr>
 </thead>
-
 <tbody id="attendanceTable"></tbody>
-
 </table>
-
 </div>
 
-
 <script>
+const ADMIN_EMAIL = "kenn04@gmail.com"; // <-- replace with your Gmail
 
-// FIREBASE CONFIG
-
+/* FIREBASE CONFIG */
 var firebaseConfig = {
-apiKey: "AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
-authDomain: "attsheet-f23a7.firebaseapp.com",
-projectId: "attsheet-f23a7",
-storageBucket: "attsheet-f23a7.appspot.com",
-messagingSenderId: "1039767080370",
-appId: "1:1039767080370:web:24e4b0e68f9d30381f68ab"
+  apiKey: "AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
+  authDomain: "attsheet-f23a7.firebaseapp.com",
+  projectId: "attsheet-f23a7",
+  storageBucket: "attsheet-f23a7.appspot.com",
+  messagingSenderId: "1039767080370",
+  appId: "1:1039767080370:web:24e4b0e68f9d30381f68ab"
 };
-
 firebase.initializeApp(firebaseConfig);
-
 var db = firebase.firestore();
 
-
-// REGISTER STUDENT
-
-function registerStudent(){
-
-var studentID=document.getElementById("studentID").value;
-var name=document.getElementById("name").value;
-var course=document.getElementById("course").value;
-var section=document.getElementById("section").value;
-var campus=document.getElementById("campus").value;
-var email=document.getElementById("email").value;
-
-if(studentID=="" || name==""){
-alert("Please fill required fields");
-return;
+/* SHOW ADMIN PANEL */
+function showAdmin(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("adminPanel").style.display="block";
 }
 
-db.collection("students").add({
+/* EMAIL/PASSWORD LOGIN */
+function loginWithEmail(){
+  var email = document.getElementById("loginEmail").value;
+  var password = document.getElementById("loginPassword").value;
 
-studentID:studentID,
-name:name,
-course:course,
-section:section,
-campus:campus,
-email:email
-
-})
-.then(function(){
-
-document.getElementById("message").innerHTML="Student Registered Successfully";
-
-document.getElementById("studentID").value="";
-document.getElementById("name").value="";
-document.getElementById("course").value="";
-document.getElementById("section").value="";
-document.getElementById("campus").value="";
-document.getElementById("email").value="";
-
-loadStudents();
-
-});
-
+  firebase.auth().signInWithEmailAndPassword(email, password)
+  .then((userCredential)=>{
+    var user = userCredential.user;
+    if(user.email !== ADMIN_EMAIL){
+      firebase.auth().signOut();
+      document.getElementById("loginMsg").innerHTML = "Access Denied";
+      return;
+    }
+    showAdmin();
+  })
+  .catch((error)=>{
+    document.getElementById("loginMsg").innerHTML = error.message;
+  });
 }
 
-
-// LOAD STUDENTS
-
-function loadStudents(){
-
-db.collection("students").get().then(function(snapshot){
-
-var table="";
-
-snapshot.forEach(function(doc){
-
-var data=doc.data();
-
-table+=`
-<tr>
-<td>${data.studentID}</td>
-<td>${data.name}</td>
-<td>${data.course}</td>
-<td>${data.section}</td>
-<td>${data.campus}</td>
-<td><div id="qr${data.studentID}"></div></td>
-</tr>
-`;
-
-});
-
-document.getElementById("studentTable").innerHTML=table;
-
-snapshot.forEach(function(doc){
-
-var data=doc.data();
-
-new QRCode(document.getElementById("qr"+data.studentID),{
-text:data.studentID,
-width:80,
-height:80
-});
-
-});
-
-});
-
+/* GOOGLE LOGIN */
+function googleLogin(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  firebase.auth().signInWithPopup(provider)
+  .then((result)=>{
+    var user = result.user;
+    if(user.email !== ADMIN_EMAIL){
+      firebase.auth().signOut();
+      document.getElementById("loginMsg").innerHTML = "Access Denied";
+      return;
+    }
+    showAdmin();
+  })
+  .catch((error)=>{
+    document.getElementById("loginMsg").innerHTML = error.message;
+  });
 }
 
-loadStudents();
-
-
-// REALTIME ATTENDANCE
-
-db.collection("attendance").onSnapshot(function(snapshot){
-
-var table="";
-
-snapshot.forEach(function(doc){
-
-var data=doc.data();
-
-table+=`
-<tr>
-<td>${data.studentID}</td>
-<td>${data.name}</td>
-<td>${data.section}</td>
-<td>${data.campus}</td>
-<td>${data.date}</td>
-<td>${data.time}</td>
-<td>${data.status}</td>
-</tr>
-`;
-
+/* SESSION CHECK */
+firebase.auth().onAuthStateChanged(function(user){
+  if(user && user.email === ADMIN_EMAIL){
+    showAdmin();
+  }
 });
 
-document.getElementById("attendanceTable").innerHTML=table;
-
-});
-
-
-// EXPORT EXCEL
-
-function exportExcel(){
-
-db.collection("attendance").get().then(function(snapshot){
-
-var data=[];
-
-snapshot.forEach(function(doc){
-
-data.push(doc.data());
-
-});
-
-var worksheet = XLSX.utils.json_to_sheet(data);
-var workbook = XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
-
-XLSX.writeFile(workbook,"Attendance_Report.xlsx");
-
-});
-
-}
-
-
-// LOGOUT
-
+/* LOGOUT */
 function logout(){
-firebase.auth().signOut();
+  firebase.auth().signOut();
+  location.reload();
 }
 
+/* REGISTER STUDENT */
+function registerStudent(){
+  var studentID=document.getElementById("studentID").value;
+  var name=document.getElementById("name").value;
+  var course=document.getElementById("course").value;
+  var section=document.getElementById("section").value;
+  var campus=document.getElementById("campus").value;
+  var email=document.getElementById("email").value;
+
+  if(studentID=="" || name==""){
+    alert("Please fill required fields");
+    return;
+  }
+
+  db.collection("students").add({studentID,name,course,section,campus,email})
+  .then(()=>{
+    document.getElementById("message").innerHTML="Student Registered Successfully";
+    document.getElementById("studentID").value="";
+    document.getElementById("name").value="";
+    document.getElementById("course").value="";
+    document.getElementById("section").value="";
+    document.getElementById("campus").value="";
+    document.getElementById("email").value="";
+    loadStudents();
+  });
+}
+
+/* LOAD STUDENTS */
+function loadStudents(){
+  db.collection("students").get().then(function(snapshot){
+    var table="";
+    snapshot.forEach(function(doc){
+      var data=doc.data();
+      table+=`<tr>
+        <td>${data.studentID}</td>
+        <td>${data.name}</td>
+        <td>${data.course}</td>
+        <td>${data.section}</td>
+        <td>${data.campus}</td>
+        <td><div id="qr${data.studentID}"></div></td>
+      </tr>`;
+    });
+    document.getElementById("studentTable").innerHTML=table;
+    snapshot.forEach(function(doc){
+      var data=doc.data();
+      new QRCode(document.getElementById("qr"+data.studentID),{
+        text:data.studentID,
+        width:80,
+        height:80
+      });
+    });
+  });
+}
+loadStudents();
+
+/* REALTIME ATTENDANCE */
+db.collection("attendance").onSnapshot(function(snapshot){
+  var table="";
+  snapshot.forEach(function(doc){
+    var data=doc.data();
+    table+=`<tr>
+      <td>${data.studentID}</td>
+      <td>${data.name}</td>
+      <td>${data.section}</td>
+      <td>${data.campus}</td>
+      <td>${data.date}</td>
+      <td>${data.time}</td>
+      <td>${data.status}</td>
+    </tr>`;
+  });
+  document.getElementById("attendanceTable").innerHTML=table;
+});
+
+/* EXPORT TO EXCEL */
+function exportExcel(){
+  db.collection("attendance").get().then(function(snapshot){
+    var data=[];
+    snapshot.forEach(function(doc){ data.push(doc.data()); });
+    var worksheet=XLSX.utils.json_to_sheet(data);
+    var workbook=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
+    XLSX.writeFile(workbook,"Attendance_Report.xlsx");
+  });
+}
 </script>
 
 </body>
