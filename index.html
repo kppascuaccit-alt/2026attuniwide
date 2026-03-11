@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -15,7 +15,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-/* ---------- BODY ---------- */
 body{
   font-family:'Roboto',sans-serif;
   background:#0F172A;
@@ -24,14 +23,12 @@ body{
   margin:0;
 }
 
-/* ---------- TITLES ---------- */
 h1{
   font-family:'Orbitron';
   color:#F97316;
   margin-bottom:20px;
 }
 
-/* ---------- LOGIN ---------- */
 #loginBox{
   text-align:center;
   margin-top:100px;
@@ -45,41 +42,25 @@ h1{
   border:1px solid #334155;
   background:#0F172A;
   color:white;
-  outline:none;
 }
 
 #loginBox button{
   margin-top:10px;
   padding:12px 20px;
-  font-weight:500;
   border-radius:6px;
-  transition:0.3s;
   background:#F97316;
   color:white;
   border:none;
   cursor:pointer;
 }
 
-#loginBox button:hover{
-  background:#FB923C;
-  transform:scale(1.05);
-}
-
-/* ---------- CONTAINER ---------- */
 .container{
   background:#1E293B;
   padding:25px;
   border-radius:12px;
   margin-bottom:25px;
-  box-shadow:0 10px 25px rgba(0,0,0,0.3);
-  transition:0.3s;
 }
 
-.container:hover{
-  transform:translateY(-3px);
-}
-
-/* ---------- INPUTS ---------- */
 input{
   width:260px;
   padding:10px;
@@ -88,10 +69,8 @@ input{
   border:1px solid #334155;
   background:#0F172A;
   color:white;
-  outline:none;
 }
 
-/* ---------- BUTTONS ---------- */
 button{
   padding:10px 15px;
   border:none;
@@ -99,13 +78,6 @@ button{
   background:#F97316;
   color:white;
   cursor:pointer;
-  font-weight:500;
-  transition:0.3s;
-}
-
-button:hover{
-  background:#FB923C;
-  transform:scale(1.05);
 }
 
 .logout{
@@ -113,27 +85,16 @@ button:hover{
   background:#ef4444;
 }
 
-.logout:hover{
-  background:#f87171;
-}
-
 .export{
   background:#F97316;
   margin-bottom:10px;
 }
 
-.export:hover{
-  background:#FB923C;
-}
-
-/* ---------- TABLE ---------- */
 table{
   width:100%;
   border-collapse:collapse;
   margin-top:15px;
   background:#0F172A;
-  border-radius:8px;
-  overflow:hidden;
 }
 
 th{
@@ -146,46 +107,18 @@ th{
 td{
   padding:12px;
   border-bottom:1px solid #334155;
-  vertical-align: middle;
 }
 
-/* ---------- ROW HOVER ---------- */
-tr:hover{
-  background:#1E293B;
-}
-
-/* ---------- QR CODES ---------- */
 #studentTable div{
   background:white;
   padding:8px;
   border-radius:8px;
   display:inline-block;
   border:2px solid #F97316;
-  transition:0.3s;
 }
 
-#studentTable div:hover{
-  transform:scale(1.1);
-  border-color:#FB923C;
-}
-
-/* ---------- MESSAGE ---------- */
-#message{
-  margin-top:10px;
-  color:#22c55e;
-  font-weight:500;
-}
-
-/* ---------- HEADINGS ---------- */
-h2{
-  color:#FBBF24;
-  margin-bottom:15px;
-}
-h3{
-  color:#FACC15;
-  margin-top:20px;
-  margin-bottom:10px;
-}
+h2{ color:#FBBF24; }
+h3{ color:#FACC15; }
 </style>
 </head>
 <body>
@@ -195,8 +128,7 @@ h3{
   <h1>Admin Login</h1>
   <input id="loginEmail" type="email" placeholder="Email"><br>
   <input id="loginPassword" type="password" placeholder="Password"><br>
-  <button onclick="loginWithEmail()">Login with Email</button><br><br>
-  <button onclick="googleLogin()">Login with Gmail (Google)</button>
+  <button onclick="loginWithEmail()">Login</button>
   <p id="loginMsg"></p>
 </div>
 
@@ -222,6 +154,15 @@ h3{
 <!-- STUDENT TABLE -->
 <div class="container">
 <h2>Students</h2>
+
+<button onclick="toggleStudents()" id="toggleBtn">Hide Students</button>
+<br><br>
+
+<input id="searchCampus" placeholder="Search Campus (Example: LASAM)">
+<button onclick="searchCampus()">Search</button>
+<button onclick="loadStudents()">Show All</button>
+
+<div id="studentsContainer">
 <table>
 <thead>
 <tr>
@@ -237,12 +178,14 @@ h3{
 </table>
 </div>
 
+</div>
+
 <!-- ATTENDANCE TABLE -->
 <div class="container">
 <h2>Attendance Records</h2>
 <button class="export" onclick="exportExcel()">Export to Excel</button>
 
-<h3>Morning Attendance </h3>
+<h3>Morning Attendance</h3>
 <table>
 <thead>
 <tr>
@@ -258,7 +201,7 @@ h3{
 <tbody id="morningAttendanceTable"></tbody>
 </table>
 
-<h3>Afternoon Attendance </h3>
+<h3>Afternoon Attendance</h3>
 <table>
 <thead>
 <tr>
@@ -283,9 +226,6 @@ var firebaseConfig = {
   apiKey: "AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
   authDomain: "attsheet-f23a7.firebaseapp.com",
   projectId: "attsheet-f23a7",
-  storageBucket: "attsheet-f23a7.appspot.com",
-  messagingSenderId: "1039767080370",
-  appId: "1:1039767080370:web:24e4b0e68f9d30381f68ab"
 };
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
@@ -296,7 +236,7 @@ function showAdmin(){
   document.getElementById("adminPanel").style.display="block";
 }
 
-/* EMAIL/PASSWORD LOGIN */
+/* LOGIN */
 function loginWithEmail(){
   var email = document.getElementById("loginEmail").value;
   var password = document.getElementById("loginPassword").value;
@@ -304,11 +244,13 @@ function loginWithEmail(){
   firebase.auth().signInWithEmailAndPassword(email, password)
   .then((userCredential)=>{
     var user = userCredential.user;
+
     if(user.email !== ADMIN_EMAIL){
       firebase.auth().signOut();
       document.getElementById("loginMsg").innerHTML = "Access Denied";
       return;
     }
+
     showAdmin();
   })
   .catch((error)=>{
@@ -316,25 +258,6 @@ function loginWithEmail(){
   });
 }
 
-/* GOOGLE LOGIN */
-function googleLogin(){
-  var provider = new firebase.auth.GoogleAuthProvider();
-  firebase.auth().signInWithPopup(provider)
-  .then((result)=>{
-    var user = result.user;
-    if(user.email !== ADMIN_EMAIL){
-      firebase.auth().signOut();
-      document.getElementById("loginMsg").innerHTML = "Access Denied";
-      return;
-    }
-    showAdmin();
-  })
-  .catch((error)=>{
-    document.getElementById("loginMsg").innerHTML = error.message;
-  });
-}
-
-/* SESSION CHECK */
 firebase.auth().onAuthStateChanged(function(user){
   if(user && user.email === ADMIN_EMAIL){
     showAdmin();
@@ -349,6 +272,7 @@ function logout(){
 
 /* REGISTER STUDENT */
 function registerStudent(){
+
   var studentID=document.getElementById("studentID").value;
   var name=document.getElementById("name").value;
   var course=document.getElementById("course").value;
@@ -356,137 +280,156 @@ function registerStudent(){
   var campus=document.getElementById("campus").value;
   var email=document.getElementById("email").value;
 
-  if(studentID=="" || name==""){
-    alert("Please fill required fields");
-    return;
-  }
-
-  db.collection("students").add({studentID,name,course,section,campus,email})
+  db.collection("students").add({
+    studentID,name,course,section,campus,email
+  })
   .then(()=>{
-    document.getElementById("message").innerHTML="Student Registered Successfully";
-    document.getElementById("studentID").value="";
-    document.getElementById("name").value="";
-    document.getElementById("course").value="";
-    document.getElementById("section").value="";
-    document.getElementById("campus").value="";
-    document.getElementById("email").value="";
+    document.getElementById("message").innerHTML="Student Registered";
     loadStudents();
   });
 }
 
-/* LOAD STUDENTS */
+/* LOAD ALL STUDENTS */
 function loadStudents(){
+
   db.collection("students").get().then(function(snapshot){
+
     var table="";
+
     snapshot.forEach(function(doc){
+
       var data=doc.data();
+
       table+=`<tr>
-        <td>${data.studentID}</td>
-        <td>${data.name}</td>
-        <td>${data.course}</td>
-        <td>${data.section}</td>
-        <td>${data.campus}</td>
-        <td><div id="qr${data.studentID}"></div></td>
+      <td>${data.studentID}</td>
+      <td>${data.name}</td>
+      <td>${data.course}</td>
+      <td>${data.section}</td>
+      <td>${data.campus}</td>
+      <td><div id="qr${data.studentID}"></div></td>
       </tr>`;
+
     });
+
     document.getElementById("studentTable").innerHTML=table;
+
     snapshot.forEach(function(doc){
+
       var data=doc.data();
+
       new QRCode(document.getElementById("qr"+data.studentID),{
         text:data.studentID,
         width:80,
         height:80
       });
+
     });
+
   });
+
 }
+
 loadStudents();
 
-/* MARK ATTENDANCE FUNCTION - Morning or Afternoon */
-function markAttendance(studentID, status){
-  db.collection("students").where("studentID","==",studentID).get()
-  .then(snapshot=>{
-    if(snapshot.empty){ console.log("Student not found"); return; }
-    snapshot.forEach(doc=>{
-      var student = doc.data();
-      const now = new Date();
-      const hour = now.getHours(); // 0-23
-      let session = "";
+/* SEARCH CAMPUS */
+function searchCampus(){
 
-      if(hour >= 5 && hour < 12){
-        session = "Morning";
-      } else if(hour >= 12 && hour < 18){
-        session = "Afternoon";
-      } else {
-        session = "Evening"; // optional
-      }
+  var campus=document.getElementById("searchCampus").value;
 
-      db.collection("attendance").add({
-        studentID: student.studentID,
-        name: student.name,
-        section: student.section,
-        campus: student.campus,
-        date: now.toLocaleDateString(),
-        time: now.toLocaleTimeString(),
-        status: status,
-        session: session
-      });
-    });
-  });
-}
+  db.collection("students")
+  .where("campus","==",campus)
+  .get()
+  .then(function(snapshot){
 
-/* REALTIME ATTENDANCE */
-db.collection("attendance").onSnapshot(function(snapshot){
-  var morningTable="";
-  var afternoonTable="";
+    var table="";
 
-  snapshot.forEach(function(doc){
-    var data=doc.data();
-    const row = `<tr>
+    snapshot.forEach(function(doc){
+
+      var data=doc.data();
+
+      table+=`<tr>
       <td>${data.studentID}</td>
       <td>${data.name}</td>
+      <td>${data.course}</td>
       <td>${data.section}</td>
       <td>${data.campus}</td>
-      <td>${data.date}</td>
-      <td>${data.time}</td>
-      <td>${data.status}</td>
-    </tr>`;
+      <td><div id="qr${data.studentID}"></div></td>
+      </tr>`;
 
-    if(data.session === "Morning"){
-      morningTable += row;
-    } else if(data.session === "Afternoon"){
-      afternoonTable += row;
-    }
+    });
+
+    document.getElementById("studentTable").innerHTML=table;
+
+    snapshot.forEach(function(doc){
+
+      var data=doc.data();
+
+      new QRCode(document.getElementById("qr"+data.studentID),{
+        text:data.studentID,
+        width:80,
+        height:80
+      });
+
+    });
+
   });
 
-  document.getElementById("morningAttendanceTable").innerHTML = morningTable;
-  document.getElementById("afternoonAttendanceTable").innerHTML = afternoonTable;
-});
+}
 
-/* EXPORT TO EXCEL */
+/* COLLAPSE STUDENTS TABLE */
+let studentsVisible = true;
+
+function toggleStudents(){
+
+  const container = document.getElementById("studentsContainer");
+  const button = document.getElementById("toggleBtn");
+
+  if(studentsVisible){
+    container.style.display="none";
+    button.innerText="Show Students";
+    studentsVisible=false;
+  }else{
+    container.style.display="block";
+    button.innerText="Hide Students";
+    studentsVisible=true;
+  }
+
+}
+
+/* EXPORT EXCEL */
 function exportExcel(){
+
   db.collection("attendance").get().then(function(snapshot){
+
     var data=[];
-    snapshot.forEach(function(doc){ 
-      let d = doc.data();
+
+    snapshot.forEach(function(doc){
+
+      let d=doc.data();
+
       data.push({
-        StudentID: d.studentID,
-        Name: d.name,
-        Section: d.section,
-        Campus: d.campus,
-        Date: d.date,
-        Time: d.time,
-        Status: d.status,
-        Session: d.session
+        StudentID:d.studentID,
+        Name:d.name,
+        Section:d.section,
+        Campus:d.campus,
+        Date:d.date,
+        Time:d.time,
+        Status:d.status
       });
+
     });
+
     var worksheet=XLSX.utils.json_to_sheet(data);
     var workbook=XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
+
     XLSX.writeFile(workbook,"Attendance_Report.xlsx");
+
   });
+
 }
 </script>
 </body>
 </html>
-
+```
