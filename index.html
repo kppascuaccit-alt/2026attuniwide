@@ -22,10 +22,9 @@ body{
   margin:0;
 }
 
-h1{
-  font-family:'Orbitron';
-  color:#F97316;
-}
+h1{ font-family:'Orbitron'; color:#F97316; margin-bottom:20px; }
+h2{ color:#FBBF24; }
+h3{ color:#FACC15; }
 
 .container{
   background:#1E293B;
@@ -51,12 +50,11 @@ button{
   background:#F97316;
   color:white;
   cursor:pointer;
+  margin:4px 0;
 }
 
-.logout{
-  float:right;
-  background:#ef4444;
-}
+.logout{ float:right; background:#ef4444; }
+.export{ background:#F97316; margin-bottom:10px; }
 
 table{
   width:100%;
@@ -104,33 +102,25 @@ td{
 <!-- REGISTER STUDENT -->
 <div class="container">
 <h2>Register Student</h2>
-
 <input id="studentID" placeholder="Student ID"><br>
 <input id="name" placeholder="Full Name"><br>
 <input id="course" placeholder="Course"><br>
 <input id="section" placeholder="Year / Section"><br>
 <input id="campus" placeholder="Campus"><br>
 <input id="email" placeholder="Email"><br>
-
 <button onclick="registerStudent()">Register Student</button>
-
 <p id="message"></p>
 </div>
 
 <!-- STUDENT TABLE -->
 <div class="container">
-
 <h2>Students</h2>
-
-<button id="toggleBtn" onclick="toggleStudents()">Hide Students</button>
-<br><br>
-
-<input id="searchCampus" placeholder="Search Campus (Example LASAM)">
-<button onclick="searchCampus()">Search</button>
+<button id="toggleBtn" onclick="toggleStudents()">Hide Students</button><br><br>
+<input id="searchCampus" placeholder="Search Campus or Name">
+<button onclick="searchStudents()">Search</button>
 <button onclick="loadStudents()">Show All</button>
 
 <div id="studentsContainer">
-
 <table>
 <thead>
 <tr>
@@ -142,417 +132,230 @@ td{
 <th>QR</th>
 </tr>
 </thead>
-
 <tbody id="studentTable"></tbody>
 </table>
-
 </div>
 </div>
 
 <!-- ATTENDANCE -->
 <div class="container">
-
 <h2>Attendance Records</h2>
-
-<button onclick="exportExcel()">Export to Excel</button>
-
-<br><br>
-
+<button class="export" onclick="exportExcel()">Export to Excel</button><br><br>
 <input type="date" id="filterDate">
 <button onclick="filterAttendance()">Show Attendance by Date</button>
 <button onclick="loadAllAttendance()">Show All</button>
 
 <h3>Morning Attendance</h3>
-
 <table>
 <thead>
 <tr>
-<th>ID</th>
-<th>Name</th>
-<th>Section</th>
-<th>Campus</th>
-<th>Date</th>
-<th>Time</th>
-<th>Status</th>
+<th>ID</th><th>Name</th><th>Section</th><th>Campus</th><th>Date</th><th>Time</th><th>Status</th>
 </tr>
 </thead>
-
 <tbody id="morningAttendanceTable"></tbody>
 </table>
 
 <h3>Afternoon Attendance</h3>
-
 <table>
 <thead>
 <tr>
-<th>ID</th>
-<th>Name</th>
-<th>Section</th>
-<th>Campus</th>
-<th>Date</th>
-<th>Time</th>
-<th>Status</th>
+<th>ID</th><th>Name</th><th>Section</th><th>Campus</th><th>Date</th><th>Time</th><th>Status</th>
 </tr>
 </thead>
-
 <tbody id="afternoonAttendanceTable"></tbody>
 </table>
-
 </div>
 
 <script>
-
 const ADMIN_EMAIL="kenn04@gmail.com";
-
 var firebaseConfig={
-apiKey:"AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
-authDomain:"attsheet-f23a7.firebaseapp.com",
-projectId:"attsheet-f23a7"
+  apiKey:"AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
+  authDomain:"attsheet-f23a7.firebaseapp.com",
+  projectId:"attsheet-f23a7"
 };
-
 firebase.initializeApp(firebaseConfig);
 var db=firebase.firestore();
 
 /* SHOW ADMIN */
-
 function showAdmin(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("adminPanel").style.display="block";
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("adminPanel").style.display="block";
 }
 
 /* LOGIN */
-
 function loginWithEmail(){
-
-var email=document.getElementById("loginEmail").value;
-var password=document.getElementById("loginPassword").value;
-
-firebase.auth().signInWithEmailAndPassword(email,password)
-
-.then((userCredential)=>{
-
-var user=userCredential.user;
-
-if(user.email!==ADMIN_EMAIL){
-firebase.auth().signOut();
-document.getElementById("loginMsg").innerHTML="Access Denied";
-return;
+  var email=document.getElementById("loginEmail").value;
+  var password=document.getElementById("loginPassword").value;
+  firebase.auth().signInWithEmailAndPassword(email,password)
+  .then((userCredential)=>{
+    var user=userCredential.user;
+    if(user.email!==ADMIN_EMAIL){
+      firebase.auth().signOut();
+      document.getElementById("loginMsg").innerHTML="Access Denied";
+      return;
+    }
+    showAdmin();
+  })
+  .catch((error)=>{
+    document.getElementById("loginMsg").innerHTML=error.message;
+  });
 }
-
-showAdmin();
-
-})
-
-.catch((error)=>{
-document.getElementById("loginMsg").innerHTML=error.message;
-});
-
-}
-
-/* SESSION */
 
 firebase.auth().onAuthStateChanged(function(user){
-if(user && user.email===ADMIN_EMAIL){
-showAdmin();
-}
+  if(user && user.email===ADMIN_EMAIL) showAdmin();
 });
 
 /* LOGOUT */
-
 function logout(){
-firebase.auth().signOut();
-location.reload();
+  firebase.auth().signOut();
+  location.reload();
 }
 
 /* REGISTER STUDENT */
-
 function registerStudent(){
+  var studentID=document.getElementById("studentID").value;
+  var name=document.getElementById("name").value;
+  var course=document.getElementById("course").value;
+  var section=document.getElementById("section").value;
+  var campus=document.getElementById("campus").value;
+  var email=document.getElementById("email").value;
 
-var studentID=document.getElementById("studentID").value;
-var name=document.getElementById("name").value;
-var course=document.getElementById("course").value;
-var section=document.getElementById("section").value;
-var campus=document.getElementById("campus").value;
-var email=document.getElementById("email").value;
-
-db.collection("students").add({
-studentID,name,course,section,campus,email
-})
-
-.then(()=>{
-document.getElementById("message").innerHTML="Student Registered";
-loadStudents();
-});
-
+  db.collection("students").add({studentID,name,course,section,campus,email})
+  .then(()=>{
+    document.getElementById("message").innerHTML="Student Registered";
+    loadStudents();
+  });
 }
 
 /* LOAD STUDENTS */
-
 function loadStudents(){
-
-db.collection("students").get().then(function(snapshot){
-
-var table="";
-
-snapshot.forEach(function(doc){
-
-var data=doc.data();
-
-table+=`<tr>
-<td>${data.studentID}</td>
-<td>${data.name}</td>
-<td>${data.course}</td>
-<td>${data.section}</td>
-<td>${data.campus}</td>
-<td><div id="qr${data.studentID}"></div></td>
-</tr>`;
-
-});
-
-document.getElementById("studentTable").innerHTML=table;
-
-snapshot.forEach(function(doc){
-
-var data=doc.data();
-
-new QRCode(document.getElementById("qr"+data.studentID),{
-text:data.studentID,
-width:80,
-height:80
-});
-
-});
-
-});
-
+  db.collection("students").get().then(snapshot=>{
+    var table="";
+    snapshot.forEach(doc=>{
+      var d=doc.data();
+      table+=`<tr>
+      <td>${d.studentID}</td><td>${d.name}</td><td>${d.course}</td>
+      <td>${d.section}</td><td>${d.campus}</td>
+      <td><div id="qr${d.studentID}"></div></td></tr>`;
+    });
+    document.getElementById("studentTable").innerHTML=table;
+    snapshot.forEach(doc=>{
+      var d=doc.data();
+      new QRCode(document.getElementById("qr"+d.studentID),{
+        text:d.studentID,width:80,height:80
+      });
+    });
+  });
 }
 
-loadStudents();
-
-/* SEARCH CAMPUS */
-
-function searchCampus(){
-
-var campus=document.getElementById("searchCampus").value;
-
-db.collection("students")
-.where("campus","==",campus)
-.get()
-
-.then(function(snapshot){
-
-var table="";
-
-snapshot.forEach(function(doc){
-
-var data=doc.data();
-
-table+=`<tr>
-<td>${data.studentID}</td>
-<td>${data.name}</td>
-<td>${data.course}</td>
-<td>${data.section}</td>
-<td>${data.campus}</td>
-<td><div id="qr${data.studentID}"></div></td>
-</tr>`;
-
-});
-
-document.getElementById("studentTable").innerHTML=table;
-
-});
-
+/* SEARCH STUDENTS - QR included */
+function searchStudents(){
+  var keyword=document.getElementById("searchCampus").value.toLowerCase();
+  db.collection("students").get().then(snapshot=>{
+    var table="";
+    snapshot.forEach(doc=>{
+      var d=doc.data();
+      if(d.campus.toLowerCase().includes(keyword) || d.name.toLowerCase().includes(keyword)){
+        table+=`<tr>
+        <td>${d.studentID}</td><td>${d.name}</td><td>${d.course}</td>
+        <td>${d.section}</td><td>${d.campus}</td>
+        <td><div id="qr${d.studentID}"></div></td></tr>`;
+      }
+    });
+    document.getElementById("studentTable").innerHTML=table;
+    snapshot.forEach(doc=>{
+      var d=doc.data();
+      if(d.campus.toLowerCase().includes(keyword) || d.name.toLowerCase().includes(keyword)){
+        new QRCode(document.getElementById("qr"+d.studentID),{
+          text:d.studentID,width:80,height:80
+        });
+      }
+    });
+  });
 }
 
 /* COLLAPSE STUDENTS */
-
 let studentsVisible=true;
-
 function toggleStudents(){
-
-const container=document.getElementById("studentsContainer");
-const button=document.getElementById("toggleBtn");
-
-if(studentsVisible){
-container.style.display="none";
-button.innerText="Show Students";
-studentsVisible=false;
-}else{
-container.style.display="block";
-button.innerText="Hide Students";
-studentsVisible=true;
-}
-
+  const container=document.getElementById("studentsContainer");
+  const button=document.getElementById("toggleBtn");
+  if(studentsVisible){
+    container.style.display="none"; button.innerText="Show Students"; studentsVisible=false;
+  } else{
+    container.style.display="block"; button.innerText="Hide Students"; studentsVisible=true;
+  }
 }
 
 /* MARK ATTENDANCE */
-
 function markAttendance(studentID,status){
-
-db.collection("students")
-.where("studentID","==",studentID)
-.get()
-
-.then(snapshot=>{
-
-snapshot.forEach(doc=>{
-
-var student=doc.data();
-
-const now=new Date();
-const hour=now.getHours();
-
-let session="";
-
-if(hour>=5 && hour<12){
-session="Morning";
-}else{
-session="Afternoon";
+  db.collection("students").where("studentID","==",studentID).get()
+  .then(snapshot=>{
+    snapshot.forEach(doc=>{
+      var s=doc.data();
+      const now=new Date();
+      const hour=now.getHours();
+      let session=(hour>=5 && hour<12)?"Morning":"Afternoon";
+      db.collection("attendance").add({
+        studentID:s.studentID,name:s.name,section:s.section,campus:s.campus,
+        date:now.toLocaleDateString(),time:now.toLocaleTimeString(),status:status,session:session
+      });
+    });
+  });
 }
 
-db.collection("attendance").add({
-
-studentID:student.studentID,
-name:student.name,
-section:student.section,
-campus:student.campus,
-date:now.toLocaleDateString(),
-time:now.toLocaleTimeString(),
-status:status,
-session:session
-
+/* REALTIME ATTENDANCE */
+db.collection("attendance").onSnapshot(snapshot=>{
+  var morning="",afternoon="";
+  snapshot.forEach(doc=>{
+    var d=doc.data();
+    var row=`<tr>
+    <td>${d.studentID}</td><td>${d.name}</td><td>${d.section}</td>
+    <td>${d.campus}</td><td>${d.date}</td><td>${d.time}</td><td>${d.status}</td></tr>`;
+    if(d.session==="Morning") morning+=row;
+    else afternoon+=row;
+  });
+  document.getElementById("morningAttendanceTable").innerHTML=morning;
+  document.getElementById("afternoonAttendanceTable").innerHTML=afternoon;
 });
 
-});
-
-});
-
-}
-
-/* LOAD ALL ATTENDANCE */
-
-function loadAllAttendance(){
-
-db.collection("attendance").get().then(function(snapshot){
-
-var morning="";
-var afternoon="";
-
-snapshot.forEach(function(doc){
-
-var d=doc.data();
-
-var row=`<tr>
-<td>${d.studentID}</td>
-<td>${d.name}</td>
-<td>${d.section}</td>
-<td>${d.campus}</td>
-<td>${d.date}</td>
-<td>${d.time}</td>
-<td>${d.status}</td>
-</tr>`;
-
-if(d.session==="Morning"){
-morning+=row;
-}else{
-afternoon+=row;
-}
-
-});
-
-document.getElementById("morningAttendanceTable").innerHTML=morning;
-document.getElementById("afternoonAttendanceTable").innerHTML=afternoon;
-
-});
-
+/* EXPORT EXCEL */
+function exportExcel(){
+  db.collection("attendance").get().then(snapshot=>{
+    var data=[];
+    snapshot.forEach(doc=>{
+      let d=doc.data();
+      data.push({StudentID:d.studentID,Name:d.name,Section:d.section,Campus:d.campus,Date:d.date,Time:d.time,Status:d.status});
+    });
+    var worksheet=XLSX.utils.json_to_sheet(data);
+    var workbook=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
+    XLSX.writeFile(workbook,"Attendance_Report.xlsx");
+  });
 }
 
 /* FILTER ATTENDANCE BY DATE */
-
 function filterAttendance(){
-
-var selectedDate=document.getElementById("filterDate").value;
-
-if(selectedDate==""){
-alert("Select a date");
-return;
+  var selectedDate=document.getElementById("filterDate").value;
+  if(!selectedDate){ alert("Select a date"); return; }
+  var morning="",afternoon="";
+  db.collection("attendance").get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      var d=doc.data();
+      var fDate=new Date(d.date).toISOString().split("T")[0];
+      if(fDate===selectedDate){
+        var row=`<tr>
+        <td>${d.studentID}</td><td>${d.name}</td><td>${d.section}</td>
+        <td>${d.campus}</td><td>${d.date}</td><td>${d.time}</td><td>${d.status}</td></tr>`;
+        if(d.session==="Morning") morning+=row;
+        else afternoon+=row;
+      }
+    });
+    document.getElementById("morningAttendanceTable").innerHTML=morning;
+    document.getElementById("afternoonAttendanceTable").innerHTML=afternoon;
+  });
 }
 
-var morning="";
-var afternoon="";
-
-db.collection("attendance").get().then(function(snapshot){
-
-snapshot.forEach(function(doc){
-
-var d=doc.data();
-
-var firestoreDate=new Date(d.date).toISOString().split("T")[0];
-
-if(firestoreDate===selectedDate){
-
-var row=`<tr>
-<td>${d.studentID}</td>
-<td>${d.name}</td>
-<td>${d.section}</td>
-<td>${d.campus}</td>
-<td>${d.date}</td>
-<td>${d.time}</td>
-<td>${d.status}</td>
-</tr>`;
-
-if(d.session==="Morning"){
-morning+=row;
-}else{
-afternoon+=row;
-}
-
-}
-
-});
-
-document.getElementById("morningAttendanceTable").innerHTML=morning;
-document.getElementById("afternoonAttendanceTable").innerHTML=afternoon;
-
-});
-
-}
-
-/* EXPORT EXCEL */
-
-function exportExcel(){
-
-db.collection("attendance").get().then(function(snapshot){
-
-var data=[];
-
-snapshot.forEach(function(doc){
-
-let d=doc.data();
-
-data.push({
-StudentID:d.studentID,
-Name:d.name,
-Section:d.section,
-Campus:d.campus,
-Date:d.date,
-Time:d.time,
-Status:d.status
-});
-
-});
-
-var worksheet=XLSX.utils.json_to_sheet(data);
-var workbook=XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
-
-XLSX.writeFile(workbook,"Attendance_Report.xlsx");
-
-});
-
-}
-
+loadStudents();
 </script>
 
 </body>
