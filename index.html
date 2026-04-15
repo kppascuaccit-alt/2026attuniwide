@@ -56,6 +56,10 @@ button{
 .logout{ float:right; background:#ef4444; }
 .export{ background:#F97316; margin-bottom:10px; }
 
+.viewer-btn{
+  background:#64748B;
+}
+
 table{
   width:100%;
   border-collapse:collapse;
@@ -87,9 +91,18 @@ td{
 <!-- LOGIN -->
 <div id="loginBox">
 <h1>Admin Login</h1>
+
 <input id="loginEmail" type="email" placeholder="Email"><br>
 <input id="loginPassword" type="password" placeholder="Password"><br>
+
 <button onclick="loginWithEmail()">Login</button>
+<br><br>
+
+<!-- ✅ VIEWER BUTTON -->
+<button class="viewer-btn" onclick="goToViewer()">
+🔓 View Public Demo
+</button>
+
 <p id="loginMsg"></p>
 </div>
 
@@ -168,13 +181,20 @@ td{
 
 <script>
 const ADMIN_EMAIL="kenn04@gmail.com";
+
 var firebaseConfig={
   apiKey:"AIzaSyCD-nMiz8I7rbneRDTjPzt3WNbigvV2xDQ",
   authDomain:"attsheet-f23a7.firebaseapp.com",
   projectId:"attsheet-f23a7"
 };
+
 firebase.initializeApp(firebaseConfig);
 var db=firebase.firestore();
+
+/* VIEWER REDIRECT */
+function goToViewer(){
+  window.location.href="public-demo.html";
+}
 
 /* SHOW ADMIN */
 function showAdmin(){
@@ -186,14 +206,17 @@ function showAdmin(){
 function loginWithEmail(){
   var email=document.getElementById("loginEmail").value;
   var password=document.getElementById("loginPassword").value;
+
   firebase.auth().signInWithEmailAndPassword(email,password)
   .then((userCredential)=>{
     var user=userCredential.user;
+
     if(user.email!==ADMIN_EMAIL){
       firebase.auth().signOut();
       document.getElementById("loginMsg").innerHTML="Access Denied";
       return;
     }
+
     showAdmin();
   })
   .catch((error)=>{
@@ -211,7 +234,7 @@ function logout(){
   location.reload();
 }
 
-/* REGISTER STUDENT WITH FORM RESET */
+/* REGISTER STUDENT */
 function registerStudent(){
   var studentID=document.getElementById("studentID").value;
   var name=document.getElementById("name").value;
@@ -229,7 +252,7 @@ function registerStudent(){
   .then(()=>{
     document.getElementById("message").innerHTML="Student Registered";
     loadStudents();
-    // Reset the form
+
     document.getElementById("studentID").value="";
     document.getElementById("name").value="";
     document.getElementById("course").value="";
@@ -250,7 +273,9 @@ function loadStudents(){
       <td>${d.section}</td><td>${d.campus}</td>
       <td><div id="qr${d.studentID}"></div></td></tr>`;
     });
+
     document.getElementById("studentTable").innerHTML=table;
+
     snapshot.forEach(doc=>{
       var d=doc.data();
       new QRCode(document.getElementById("qr"+d.studentID),{
@@ -260,13 +285,15 @@ function loadStudents(){
   });
 }
 
-/* SEARCH STUDENTS - QR included */
+/* SEARCH */
 function searchStudents(){
   var keyword=document.getElementById("searchCampus").value.toLowerCase();
+
   db.collection("students").get().then(snapshot=>{
     var table="";
     snapshot.forEach(doc=>{
       var d=doc.data();
+
       if(d.campus.toLowerCase().includes(keyword) || d.name.toLowerCase().includes(keyword)){
         table+=`<tr>
         <td>${d.studentID}</td><td>${d.name}</td><td>${d.course}</td>
@@ -274,7 +301,9 @@ function searchStudents(){
         <td><div id="qr${d.studentID}"></div></td></tr>`;
       }
     });
+
     document.getElementById("studentTable").innerHTML=table;
+
     snapshot.forEach(doc=>{
       var d=doc.data();
       if(d.campus.toLowerCase().includes(keyword) || d.name.toLowerCase().includes(keyword)){
@@ -286,88 +315,46 @@ function searchStudents(){
   });
 }
 
-/* COLLAPSE STUDENTS */
+/* TOGGLE */
 let studentsVisible=true;
 function toggleStudents(){
   const container=document.getElementById("studentsContainer");
   const button=document.getElementById("toggleBtn");
+
   if(studentsVisible){
-    container.style.display="none"; button.innerText="Show Students"; studentsVisible=false;
-  } else{
-    container.style.display="block"; button.innerText="Hide Students"; studentsVisible=true;
+    container.style.display="none";
+    button.innerText="Show Students";
+    studentsVisible=false;
+  }else{
+    container.style.display="block";
+    button.innerText="Hide Students";
+    studentsVisible=true;
   }
 }
 
-/* MARK ATTENDANCE */
-function markAttendance(studentID,status){
-  db.collection("students").where("studentID","==",studentID).get()
-  .then(snapshot=>{
-    snapshot.forEach(doc=>{
-      var s=doc.data();
-      const now=new Date();
-      const hour=now.getHours();
-      let session=(hour>=5 && hour<12)?"Morning":"Afternoon";
-      db.collection("attendance").add({
-        studentID:s.studentID,name:s.name,section:s.section,campus:s.campus,
-        date:now.toLocaleDateString(),time:now.toLocaleTimeString(),status:status,session:session
-      });
-    });
-  });
-}
-
-/* REALTIME ATTENDANCE */
-db.collection("attendance").onSnapshot(snapshot=>{
-  var morning="",afternoon="";
-  snapshot.forEach(doc=>{
-    var d=doc.data();
-    var row=`<tr>
-    <td>${d.studentID}</td><td>${d.name}</td><td>${d.section}</td>
-    <td>${d.campus}</td><td>${d.date}</td><td>${d.time}</td><td>${d.status}</td></tr>`;
-    if(d.session==="Morning") morning+=row;
-    else afternoon+=row;
-  });
-  document.getElementById("morningAttendanceTable").innerHTML=morning;
-  document.getElementById("afternoonAttendanceTable").innerHTML=afternoon;
-});
-
-/* EXPORT EXCEL */
-function exportExcel(){
+/* LOAD ATTENDANCE */
+function loadAllAttendance(){
   db.collection("attendance").get().then(snapshot=>{
-    var data=[];
-    snapshot.forEach(doc=>{
-      let d=doc.data();
-      data.push({StudentID:d.studentID,Name:d.name,Section:d.section,Campus:d.campus,Date:d.date,Time:d.time,Status:d.status});
-    });
-    var worksheet=XLSX.utils.json_to_sheet(data);
-    var workbook=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook,worksheet,"Attendance");
-    XLSX.writeFile(workbook,"Attendance_Report.xlsx");
-  });
-}
+    var m="",a="";
 
-/* FILTER ATTENDANCE BY DATE */
-function filterAttendance(){
-  var selectedDate=document.getElementById("filterDate").value;
-  if(!selectedDate){ alert("Select a date"); return; }
-  var morning="",afternoon="";
-  db.collection("attendance").get().then(snapshot=>{
     snapshot.forEach(doc=>{
       var d=doc.data();
-      var fDate=new Date(d.date).toISOString().split("T")[0];
-      if(fDate===selectedDate){
-        var row=`<tr>
-        <td>${d.studentID}</td><td>${d.name}</td><td>${d.section}</td>
-        <td>${d.campus}</td><td>${d.date}</td><td>${d.time}</td><td>${d.status}</td></tr>`;
-        if(d.session==="Morning") morning+=row;
-        else afternoon+=row;
-      }
+
+      var row=`<tr>
+      <td>${d.studentID}</td><td>${d.name}</td><td>${d.section}</td>
+      <td>${d.campus}</td><td>${d.date}</td><td>${d.time}</td><td>${d.status}</td></tr>`;
+
+      if(d.session==="Morning") m+=row;
+      else a+=row;
     });
-    document.getElementById("morningAttendanceTable").innerHTML=morning;
-    document.getElementById("afternoonAttendanceTable").innerHTML=afternoon;
+
+    document.getElementById("morningAttendanceTable").innerHTML=m;
+    document.getElementById("afternoonAttendanceTable").innerHTML=a;
   });
 }
 
 loadStudents();
+loadAllAttendance();
 </script>
 
 </body>
